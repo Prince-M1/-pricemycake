@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PriceMyCake.com — Free Cake Pricing Calculator for Bakers</title>
+  <meta name="description" content="Free cake pricing calculator for independent bakers. Instantly calculate your retail price, profit margin, and price per serving." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23E8844A'/><text y='.9em' font-size='60' x='50%' dominant-baseline='middle' text-anchor='middle'>🎂</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --accent: #E8844A; --accent-dark: #CC6A30;
+      --gold: #D4A96A; --green: #5BA88A;
+      --page-bg: #F5EFE6; --card-bg: #FFFFFF;
+      --text: #2C2117; --text-muted: #8A7A6A;
+      --border: #E2D5C3; --field-bg: #FFFFFF;
+      --placeholder: #A89888; --muted-bg: #EDE6DA;
+      --card-shadow: 0 8px 32px rgba(120,80,40,0.10), 0 1px 4px rgba(120,80,40,0.06);
+      --result-shadow: 0 12px 48px rgba(232,132,74,0.35);
+    }
+    .dark {
+      --page-bg: #1C1A17; --card-bg: rgba(42,37,34,0.9);
+      --text: #F5F0E8; --text-muted: #7A6A5A;
+      --border: #3E3530; --field-bg: #2A2522;
+      --placeholder: #7A6F68; --muted-bg: #2A2522;
+      --card-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--page-bg); color: var(--text);
+      min-height: 100vh; transition: background-color 0.3s, color 0.3s;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* THEME TOGGLE */
+    #theme-toggle {
+      position: fixed; top: 1rem; right: 1rem; z-index: 999;
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 1.5px solid var(--border); background: var(--card-bg);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.15s;
+    }
+    #theme-toggle:active { transform: scale(0.9); }
+    #theme-toggle svg { width: 20px; height: 20px; }
+
+    /* HERO */
+    .hero {
+      position: relative; width: 100%; height: 400px; overflow: hidden;
+      background: #3a2010;
+    }
+    .hero-img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; filter: brightness(0.62) saturate(1.15);
+    }
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(20,10,4,0.1) 0%, rgba(20,10,4,0.3) 45%, var(--page-bg) 92%);
+    }
+    .hero-content {
+      position: relative; z-index: 2; height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 1rem 1.5rem 4rem;
+    }
+    .hero-title {
+      font-family: 'Inter', sans-serif; font-size: clamp(2.4rem, 9vw, 3.4rem);
+      font-weight: 900; color: #fff; letter-spacing: -0.04em; line-height: 1.05;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.4);
+    }
+    .hero-title span { color: #E8844A; }
+    .hero-tagline {
+      margin-top: 0.5rem; font-size: 1.05rem; font-weight: 500;
+      color: rgba(255,255,255,0.88); text-shadow: 0 1px 8px rgba(0,0,0,0.3);
+    }
+
+    /* MAIN */
+    .main {
+      position: relative; max-width: 520px;
+      margin: -5.5rem auto 0; padding: 0 1rem 4rem;
+      z-index: 10;
+    }
+
+    /* MODE TOGGLE */
+    .mode-toggle {
+      display: flex; position: relative; z-index: 100;
+      background: rgba(255,255,255,0.65);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.5);
+      border-radius: 16px; padding: 6px; gap: 4px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 16px rgba(120,80,40,0.08);
+    }
+    .dark .mode-toggle { background: rgba(42,37,34,0.8); border-color: rgba(255,255,255,0.08); }
+    .mode-btn {
+      flex: 1; padding: 0.75rem 0.5rem;
+      border: none; border-radius: 12px;
+      font-family: 'Inter', sans-serif; font-size: 0.875rem; font-weight: 700;
+      cursor: pointer; background: transparent; color: var(--text-muted);
+      transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+      position: relative; z-index: 2;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mode-btn.active {
+      background: linear-gradient(135deg, #E8844A 0%, #CC6A30 100%);
+      color: #fff; box-shadow: 0 2px 12px rgba(232,132,74,0.35);
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--card-bg); border-radius: 20px;
+      border: 1px solid var(--border); box-shadow: var(--card-shadow);
+      padding: 1.5rem; margin-bottom: 1rem;
+    }
+    .card-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* FIELDS */
+    .field { margin-bottom: 1rem; }
+    .field:last-child { margin-bottom: 0; }
+    .field-label {
+      display: block; font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 0.45rem;
+    }
+    .field-wrap { position: relative; }
+    .field-prefix, .field-suffix {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      font-weight: 700; color: var(--accent); opacity: 0.75; pointer-events: none;
+    }
+    .field-prefix { left: 0.85rem; font-size: 0.95rem; }
+    .field-suffix { right: 0.85rem; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    input.field-input {
+      width: 100%; background: var(--field-bg);
+      border: 1.5px solid var(--border); border-radius: 12px;
+      padding: 0.9rem 1rem; font-size: 1rem; font-weight: 500;
+      font-family: 'Inter', sans-serif; color: var(--text); outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input.field-input::placeholder { color: var(--placeholder); }
+    input.field-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(232,132,74,0.12); }
+    input.field-input[type=number]::-webkit-inner-spin-button,
+    input.field-input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input.field-input[type=number] { -moz-appearance: textfield; }
+    .has-prefix input.field-input { padding-left: 1.9rem; }
+    .has-suffix input.field-input { padding-right: 2.8rem; }
+
+    /* CUSTOM DROPDOWN */
+    .cselect { position: relative; }
+    .cselect-trigger {
+      width: 100%; background: var(--field-bg);
+      border: 1.5px solid var(--border); border-radius: 12px;
+      padding: 0.9rem 2.5rem 0.9rem 1rem;
+      font-size: 1rem; font-weight: 500; font-family: 'Inter', sans-serif;
+      color: var(--text); cursor: pointer; text-align: left;
+      display: flex; align-items: center; justify-content: space-between;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cselect-trigger:focus { outline: none; }
+    .cselect.open .cselect-trigger {
+      border-color: var(--accent); box-shadow: 0 0 0 4px rgba(232,132,74,0.12);
+    }
+    .cselect-arrow {
+      width: 16px; height: 16px; flex-shrink: 0;
+      transition: transform 0.2s; color: var(--accent);
+    }
+    .cselect.open .cselect-arrow { transform: rotate(180deg); }
+    .cselect-menu {
+      display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      background: var(--card-bg); border: 1.5px solid var(--border);
+      border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+      padding: 6px; z-index: 500; list-style: none;
+    }
+    .cselect.open .cselect-menu { display: block; }
+    .cselect-option {
+      padding: 0.75rem 1rem; border-radius: 10px; cursor: pointer;
+      font-size: 0.9rem; font-weight: 500; color: var(--text);
+      display: flex; align-items: center; justify-content: space-between;
+      transition: background 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cselect-option:hover { background: var(--muted-bg); }
+    .cselect-option.selected {
+      background: rgba(232,132,74,0.12); color: var(--accent); font-weight: 700;
+    }
+    .cselect-check { color: var(--accent); opacity: 0; }
+    .cselect-option.selected .cselect-check { opacity: 1; }
+
+    /* GRID */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 380px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* CALC BUTTON */
+    .btn-calc {
+      width: 100%; min-height: 58px;
+      background: linear-gradient(135deg, #E8844A 0%, #CC6A30 100%);
+      color: #fff; font-family: 'Inter', sans-serif;
+      font-size: 1rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+      border: none; border-radius: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      box-shadow: 0 6px 24px rgba(232,132,74,0.4);
+      transition: transform 0.12s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
+      margin-bottom: 1rem; -webkit-tap-highlight-color: transparent;
+    }
+    .btn-calc:active { transform: scale(0.96); }
+
+    /* RESULTS */
+    #results { display: none; }
+    #results.visible { display: block; animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) forwards; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+
+    .result-hero {
+      border-radius: 20px; padding: 2.2rem 1.5rem; text-align: center;
+      position: relative; overflow: hidden;
+      background: linear-gradient(145deg, #E8844A 0%, #CC6A30 100%);
+      box-shadow: var(--result-shadow); margin-bottom: 1rem;
+    }
+    .result-hero::before { content:''; position:absolute; width:160px; height:160px; border-radius:50%; background:rgba(255,255,255,0.09); top:-40px; right:-40px; }
+    .result-hero::after  { content:''; position:absolute; width:110px; height:110px; border-radius:50%; background:rgba(255,255,255,0.06); bottom:-32px; left:-32px; }
+    .result-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(255,255,255,0.22); color:#fff;
+      font-size:0.65rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+      padding:0.3rem 0.8rem; border-radius:999px; margin-bottom:1rem;
+    }
+    .result-price {
+      font-family:'Playfair Display', Georgia, serif;
+      font-size:clamp(3.8rem,13vw,5.2rem); font-weight:900;
+      color:#fff; line-height:1; text-shadow:0 2px 16px rgba(0,0,0,0.15); position:relative; z-index:1;
+    }
+    .result-slice { display:flex; align-items:center; justify-content:space-between; padding:1.1rem 1.5rem; }
+    .result-slice-label { font-size:0.68rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); }
+    .result-slice-sub { font-size:0.8rem; color:var(--text-muted); margin-top:2px; }
+    .result-slice-price { font-family:'Playfair Display', Georgia, serif; font-size:1.9rem; font-weight:800; color:var(--text); }
+    .result-slice-price span { font-family:'Inter',sans-serif; font-size:0.8rem; font-weight:500; color:var(--text-muted); margin-left:3px; }
+
+    .breakdown-bar { height:10px; border-radius:999px; overflow:hidden; display:flex; background:var(--muted-bg); margin-bottom:1rem; }
+    .bar-seg { height:100%; width:0; transition:width 0.7s ease; }
+    .breakdown-items { display:flex; flex-direction:column; gap:0.65rem; }
+    .breakdown-item { display:flex; align-items:center; justify-content:space-between; border-radius:12px; padding:0.75rem 1rem; }
+    .breakdown-item-left { display:flex; align-items:center; gap:0.6rem; }
+    .breakdown-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .breakdown-name { font-size:0.85rem; font-weight:500; color:var(--text); opacity:0.8; }
+    .breakdown-val { font-size:0.95rem; font-weight:800; }
+
+    /* SCALER */
+    .scaler-info {
+      background:rgba(232,132,74,0.07); border:1.5px solid rgba(232,132,74,0.2);
+      border-radius:16px; padding:1rem 1.25rem;
+      font-size:0.875rem; font-weight:500; color:var(--text-muted); line-height:1.6; margin-bottom:1rem;
+    }
+    .scaler-result {
+      display:none; border-radius:20px; padding:2.5rem 1.5rem; text-align:center;
+      position:relative; overflow:hidden;
+      background:linear-gradient(135deg, rgba(232,132,74,0.14) 0%, rgba(232,132,74,0.04) 100%);
+      border:1.5px solid rgba(232,132,74,0.3); box-shadow:var(--result-shadow); margin-top:1rem;
+    }
+    .scaler-result::before { content:''; position:absolute; width:110px; height:110px; border-radius:50%; background:var(--accent); opacity:0.08; top:-28px; right:-28px; }
+    .scaler-result.visible { display:block; animation:fadeUp 0.45s cubic-bezier(0.22,1,0.36,1) forwards; }
+    .scaler-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(232,132,74,0.15); color:var(--accent);
+      font-size:0.65rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+      padding:0.3rem 0.8rem; border-radius:999px; margin-bottom:1rem;
+    }
+    .scaler-multiplier { font-family:'Playfair Display',Georgia,serif; font-size:clamp(4rem,16vw,6rem); font-weight:900; color:var(--text); line-height:1; }
+    .scaler-sub { font-size:0.875rem; font-weight:500; color:var(--text-muted); margin-top:0.75rem; }
+    .scaler-sub span { color:var(--accent); }
+
+    footer { text-align:center; margin-top:3rem; padding-bottom:1rem; }
+    footer p { font-size:0.72rem; color:var(--text-muted); }
+    footer .brand { font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); opacity:0.6; margin-top:4px; }
+  </style>
+</head>
+<body>
+
+<button id="theme-toggle" aria-label="Toggle dark mode"></button>
+
+<div class="hero">
+  <img class="hero-img" src="https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=900&q=80&auto=format&fit=crop" alt="Fresh baked goods" />
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">Price<span>My</span>Cake</h1>
+    <p class="hero-tagline">Know your worth. Price with confidence.</p>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="btn-pricing" onclick="switchMode('pricing')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Price Calculator
+    </button>
+    <button class="mode-btn" id="btn-scaler" onclick="switchMode('scaler')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Recipe Scaler
+    </button>
+  </div>
+
+  <!-- PRICING -->
+  <div id="pricing-section">
+    <div class="card">
+      <p class="card-label">Item Details</p>
+      <div class="field">
+        <label class="field-label">Item Type</label>
+        <div class="cselect" id="cs-item-type" data-value="custom-cake">
+          <button type="button" class="cselect-trigger" onclick="toggleSelect('cs-item-type')">
+            <span class="cselect-label">Custom Cake</span>
+            <svg class="cselect-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <ul class="cselect-menu">
+            <li class="cselect-option selected" onclick="selectOption('cs-item-type','custom-cake','Custom Cake')">Custom Cake <span class="cselect-check">✓</span></li>
+            <li class="cselect-option" onclick="selectOption('cs-item-type','pastry-batch','Pastry / Batch Bake')">Pastry / Batch Bake <span class="cselect-check">✓</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label class="field-label">Size / Dimensions</label>
+          <div class="cselect" id="cs-size" data-value="8-inch">
+            <button type="button" class="cselect-trigger" onclick="toggleSelect('cs-size')">
+              <span class="cselect-label">8-inch / 20cm</span>
+              <svg class="cselect-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <ul class="cselect-menu">
+              <li class="cselect-option" onclick="selectOption('cs-size','6-inch','6-inch / 15cm')">6-inch / 15cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option selected" onclick="selectOption('cs-size','8-inch','8-inch / 20cm')">8-inch / 20cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-size','9-inch','9-inch / 23cm')">9-inch / 23cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-size','10-inch','10-inch / 25cm')">10-inch / 25cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-size','12-inch','12-inch / 30cm')">12-inch / 30cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-size','quarter-sheet','¼ Sheet')">¼ Sheet <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-size','half-sheet','½ Sheet')">½ Sheet <span class="cselect-check">✓</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="field" id="tiers-field">
+          <label class="field-label">Number of Tiers</label>
+          <div class="cselect" id="cs-tiers" data-value="1">
+            <button type="button" class="cselect-trigger" onclick="toggleSelect('cs-tiers')">
+              <span class="cselect-label">1 Tier</span>
+              <svg class="cselect-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <ul class="cselect-menu">
+              <li class="cselect-option selected" onclick="selectOption('cs-tiers','1','1 Tier')">1 Tier <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-tiers','2','2 Tiers')">2 Tiers <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-tiers','3','3 Tiers')">3 Tiers <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-tiers','4','4+ Tiers')">4+ Tiers <span class="cselect-check">✓</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-label">Your Costs</p>
+      <div class="grid-2">
+        <div class="field">
+          <label class="field-label">Food &amp; Ingredients</label>
+          <div class="field-wrap has-prefix">
+            <span class="field-prefix">$</span>
+            <input class="field-input" type="number" id="food-cost" inputmode="decimal" step="0.01" min="0" placeholder="0.00" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Packaging &amp; Supplies</label>
+          <div class="field-wrap has-prefix">
+            <span class="field-prefix">$</span>
+            <input class="field-input" type="number" id="packaging-cost" inputmode="decimal" step="0.01" min="0" placeholder="0.00" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-label">Your Labor</p>
+      <div class="grid-2">
+        <div class="field">
+          <label class="field-label">Total Labor Time</label>
+          <div class="field-wrap has-suffix">
+            <input class="field-input" type="number" id="labor-time" inputmode="decimal" step="0.25" min="0" placeholder="0" />
+            <span class="field-suffix">hrs</span>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Desired Hourly Wage</label>
+          <div class="field-wrap has-prefix">
+            <span class="field-prefix">$</span>
+            <input class="field-input" type="number" id="hourly-wage" inputmode="decimal" step="0.01" min="0" placeholder="0.00" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="calculate()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+      Calculate Retail Price
+    </button>
+
+    <div id="results">
+      <div class="result-hero">
+        <div class="result-badge">✦ Recommended Retail Price</div>
+        <div class="result-price" id="result-price">$0.00</div>
+      </div>
+      <div class="card result-slice" id="slice-card">
+        <div>
+          <div class="result-slice-label">Price Per Serving</div>
+          <div class="result-slice-sub" id="slice-sub">Based on ~0 slices</div>
+        </div>
+        <div class="result-slice-price" id="slice-price">$0.00<span>/slice</span></div>
+      </div>
+      <div class="card">
+        <p class="card-label">Cost Breakdown</p>
+        <div class="breakdown-bar">
+          <div class="bar-seg" id="bar-ingredients" style="background:#D4A96A;"></div>
+          <div class="bar-seg" id="bar-labor" style="background:#E8844A;"></div>
+          <div class="bar-seg" id="bar-profit" style="background:#5BA88A;"></div>
+        </div>
+        <div class="breakdown-items">
+          <div class="breakdown-item" style="background:rgba(212,169,106,0.12);border:1px solid rgba(212,169,106,0.35);">
+            <div class="breakdown-item-left"><span class="breakdown-dot" style="background:#D4A96A;"></span><span class="breakdown-name">Ingredients &amp; Packaging</span></div>
+            <span class="breakdown-val" id="val-ingredients" style="color:#D4A96A;">$0.00</span>
+          </div>
+          <div class="breakdown-item" style="background:rgba(232,132,74,0.1);border:1px solid rgba(232,132,74,0.3);">
+            <div class="breakdown-item-left"><span class="breakdown-dot" style="background:#E8844A;"></span><span class="breakdown-name">Labor Payout</span></div>
+            <span class="breakdown-val" id="val-labor" style="color:#E8844A;">$0.00</span>
+          </div>
+          <div class="breakdown-item" style="background:rgba(91,168,138,0.1);border:1px solid rgba(91,168,138,0.3);">
+            <div class="breakdown-item-left"><span class="breakdown-dot" style="background:#5BA88A;"></span><span class="breakdown-name">Business Net Profit</span></div>
+            <span class="breakdown-val" id="val-profit" style="color:#5BA88A;">$0.00</span>
+          </div>
+        </div>
+      </div>
+      <!-- AD BANNER START -->
+      <div style="width:100%;display:flex;justify-content:center;padding:0.5rem 0;">
+        <div style="width:100%;min-height:90px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:var(--muted-bg);border:1.5px dashed var(--border);">
+          <span style="font-size:0.75rem;font-weight:500;color:var(--text-muted);">Advertisement</span>
+        </div>
+      </div>
+      <!-- AD BANNER END -->
+    </div>
+  </div>
+
+  <!-- SCALER -->
+  <div id="scaler-section" style="display:none;">
+    <div class="scaler-info">
+      Switching pan sizes? Select your original and target sizes to instantly find the ingredient multiplier for your recipe.
+    </div>
+    <div class="card">
+      <div class="grid-2">
+        <div class="field">
+          <label class="field-label">Original Pan Size</label>
+          <div class="cselect" id="cs-orig" data-value="8-inch">
+            <button type="button" class="cselect-trigger" onclick="toggleSelect('cs-orig')">
+              <span class="cselect-label">8-inch / 20cm</span>
+              <svg class="cselect-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <ul class="cselect-menu">
+              <li class="cselect-option" onclick="selectOption('cs-orig','6-inch','6-inch / 15cm')">6-inch / 15cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option selected" onclick="selectOption('cs-orig','8-inch','8-inch / 20cm')">8-inch / 20cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-orig','9-inch','9-inch / 23cm')">9-inch / 23cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-orig','10-inch','10-inch / 25cm')">10-inch / 25cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-orig','12-inch','12-inch / 30cm')">12-inch / 30cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-orig','quarter-sheet','¼ Sheet')">¼ Sheet <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-orig','half-sheet','½ Sheet')">½ Sheet <span class="cselect-check">✓</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Target Pan Size</label>
+          <div class="cselect" id="cs-target" data-value="10-inch">
+            <button type="button" class="cselect-trigger" onclick="toggleSelect('cs-target')">
+              <span class="cselect-label">10-inch / 25cm</span>
+              <svg class="cselect-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <ul class="cselect-menu">
+              <li class="cselect-option" onclick="selectOption('cs-target','6-inch','6-inch / 15cm')">6-inch / 15cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-target','8-inch','8-inch / 20cm')">8-inch / 20cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-target','9-inch','9-inch / 23cm')">9-inch / 23cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option selected" onclick="selectOption('cs-target','10-inch','10-inch / 25cm')">10-inch / 25cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-target','12-inch','12-inch / 30cm')">12-inch / 30cm <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-target','quarter-sheet','¼ Sheet')">¼ Sheet <span class="cselect-check">✓</span></li>
+              <li class="cselect-option" onclick="selectOption('cs-target','half-sheet','½ Sheet')">½ Sheet <span class="cselect-check">✓</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-calc" onclick="calculateScaler()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      Calculate Multiplier
+    </button>
+    <div class="scaler-result" id="scaler-result">
+      <div class="scaler-badge">✦ Multiply your ingredients by</div>
+      <div class="scaler-multiplier" id="scaler-multiplier">0.00×</div>
+      <div class="scaler-sub" id="scaler-sub"></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Built for independent bakers &amp; cake artists</p>
+    <p class="brand">PriceMyCake.com</p>
+  </footer>
+</div>
+
+<script>
+  // THEME
+  const toggleBtn = document.getElementById('theme-toggle');
+  const root = document.documentElement;
+  const SUN = `<svg viewBox="0 0 24 24" fill="none" stroke="#E8844A" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+  const MOON = `<svg viewBox="0 0 24 24" fill="none" stroke="#E8844A" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+
+  function applyTheme(dark) {
+    root.classList.toggle('dark', dark);
+    document.body.style.backgroundColor = dark ? '#1C1A17' : '#F5EFE6';
+    toggleBtn.innerHTML = dark ? SUN : MOON;
+    localStorage.setItem('pmc-theme', dark ? 'dark' : 'light');
+  }
+  (function() {
+    const saved = localStorage.getItem('pmc-theme');
+    applyTheme(saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches);
+  })();
+  toggleBtn.addEventListener('click', () => applyTheme(!root.classList.contains('dark')));
+
+  // MODE SWITCH
+  function switchMode(mode) {
+    const pricing = document.getElementById('pricing-section');
+    const scaler  = document.getElementById('scaler-section');
+    const btnP    = document.getElementById('btn-pricing');
+    const btnS    = document.getElementById('btn-scaler');
+    if (mode === 'pricing') {
+      pricing.style.display = 'block';
+      scaler.style.display  = 'none';
+      btnP.classList.add('active');
+      btnS.classList.remove('active');
+    } else {
+      pricing.style.display = 'none';
+      scaler.style.display  = 'block';
+      btnP.classList.remove('active');
+      btnS.classList.add('active');
+    }
+    closeAllSelects();
+  }
+
+  // CUSTOM SELECT
+  function toggleSelect(id) {
+    const el = document.getElementById(id);
+    const wasOpen = el.classList.contains('open');
+    closeAllSelects();
+    if (!wasOpen) el.classList.add('open');
+  }
+  function closeAllSelects() {
+    document.querySelectorAll('.cselect.open').forEach(el => el.classList.remove('open'));
+  }
+  function selectOption(selectId, value, label) {
+    const el = document.getElementById(selectId);
+    el.dataset.value = value;
+    el.querySelector('.cselect-label').textContent = label;
+    el.querySelectorAll('.cselect-option').forEach(opt => {
+      opt.classList.toggle('selected', opt.getAttribute('onclick').includes("'" + value + "'"));
+    });
+    el.classList.remove('open');
+    if (selectId === 'cs-item-type') {
+      document.getElementById('tiers-field').style.display = value === 'pastry-batch' ? 'none' : '';
+    }
+  }
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.cselect')) closeAllSelects();
+  });
+
+  // DATA
+  const SLICE_PER_TIER = { '6-inch':12,'8-inch':24,'9-inch':32,'10-inch':38,'12-inch':56,'quarter-sheet':24,'half-sheet':48 };
+  const RADIUS = { '6-inch':3,'8-inch':4,'9-inch':4.5,'10-inch':5,'12-inch':6,'quarter-sheet':4.5,'half-sheet':6 };
+  const SIZE_LABELS = { '6-inch':'6-inch / 15cm','8-inch':'8-inch / 20cm','9-inch':'9-inch / 23cm','10-inch':'10-inch / 25cm','12-inch':'12-inch / 30cm','quarter-sheet':'¼ Sheet','half-sheet':'½ Sheet' };
+
+  function val(id) { return document.getElementById(id); }
+  function fmt(n) { return '$' + n.toFixed(2); }
+
+  function calculate() {
+    const food      = parseFloat(val('food-cost').value)      || 0;
+    const packaging = parseFloat(val('packaging-cost').value) || 0;
+    const laborTime = parseFloat(val('labor-time').value)     || 0;
+    const wage      = parseFloat(val('hourly-wage').value)    || 0;
+    const size      = document.getElementById('cs-size').dataset.value;
+    const tiers     = document.getElementById('cs-tiers').dataset.value;
+    const isPastry  = document.getElementById('cs-item-type').dataset.value === 'pastry-batch';
+
+    const outOfPocket    = food + packaging;
+    const laborPayout    = laborTime * wage;
+    const productionCost = outOfPocket + laborPayout;
+    const retailPrice    = productionCost / 0.6;
+    const netProfit      = retailPrice - productionCost;
+    const sliceCount     = (SLICE_PER_TIER[size] || 24) * parseInt(isPastry ? '1' : tiers);
+    const pricePerSlice  = sliceCount > 0 ? retailPrice / sliceCount : 0;
+
+    val('result-price').textContent = fmt(retailPrice);
+    val('val-ingredients').textContent = fmt(outOfPocket);
+    val('val-labor').textContent = fmt(laborPayout);
+    val('val-profit').textContent = fmt(netProfit);
+
+    const sliceCard = val('slice-card');
+    if (isPastry) {
+      sliceCard.style.display = 'none';
+    } else {
+      sliceCard.style.display = 'flex';
+      val('slice-price').innerHTML = fmt(pricePerSlice) + '<span>/slice</span>';
+      val('slice-sub').textContent = 'Based on ~' + sliceCount + ' slices';
+    }
+
+    const total = retailPrice || 1;
+    setTimeout(() => {
+      val('bar-ingredients').style.width = ((outOfPocket / total) * 100) + '%';
+      val('bar-labor').style.width       = ((laborPayout  / total) * 100) + '%';
+      val('bar-profit').style.width      = ((netProfit    / total) * 100) + '%';
+    }, 50);
+
+    const resultsEl = val('results');
+    resultsEl.classList.remove('visible');
+    void resultsEl.offsetWidth;
+    resultsEl.classList.add('visible');
+    setTimeout(() => resultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+  }
+
+  function calculateScaler() {
+    const orig   = document.getElementById('cs-orig').dataset.value;
+    const target = document.getElementById('cs-target').dataset.value;
+    const ratio  = (RADIUS[target] * RADIUS[target]) / (RADIUS[orig] * RADIUS[orig]);
+    val('scaler-multiplier').textContent = ratio.toFixed(2) + '×';
+    val('scaler-sub').innerHTML = SIZE_LABELS[orig] + ' <span>→</span> ' + SIZE_LABELS[target];
+    const el = val('scaler-result');
+    el.classList.remove('visible');
+    void el.offsetWidth;
+    el.classList.add('visible');
+  }
+</script>
+</body>
+</html>
