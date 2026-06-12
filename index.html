@@ -237,6 +237,32 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
+    /* TOOLTIP */
+    .tooltip-wrap { position: relative; display: inline-flex; align-items: center; }
+    .tooltip-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      font-size: 0.6rem; font-weight: 800; cursor: pointer;
+      flex-shrink: 0;
+    }
+    .tooltip-text {
+      display: none;
+      position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+      background: var(--text); color: var(--card-bg);
+      font-size: 0.72rem; font-weight: 500; line-height: 1.5;
+      padding: 0.6rem 0.8rem; border-radius: 10px;
+      width: 220px; z-index: 999;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      white-space: normal; text-transform: none; letter-spacing: 0;
+    }
+    .tooltip-text::after {
+      content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 5px solid transparent; border-top-color: var(--text);
+    }
+    .tooltip-wrap:hover .tooltip-text,
+    .tooltip-wrap:focus-within .tooltip-text { display: block; }
+
     footer { text-align:center; margin-top:3rem; padding-bottom:1rem; }
     footer p { font-size:0.72rem; color:var(--text-muted); }
     footer .brand { font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); opacity:0.6; margin-top:4px; }
@@ -247,7 +273,7 @@
 <button id="theme-toggle" aria-label="Toggle dark mode"></button>
 
 <div class="hero">
-  <img class="hero-img" src="https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=900&q=80&auto=format&fit=crop" alt="Fresh baked goods" />
+  <img class="hero-img" src="hero.jpg" alt="Fresh baked goods" />
   <div class="hero-overlay"></div>
   <div class="hero-content">
     <h1 class="hero-title">Price<span>My</span>Cake</h1>
@@ -273,17 +299,17 @@
   <!-- PRICING -->
   <div id="pricing-section">
     <div class="card">
-      <p class="card-label">Item Details</p>
+      <p class="card-label">Project Details</p>
       <div class="field">
-        <label class="field-label">Item Type</label>
+        <label class="field-label">Project Type</label>
         <div class="cselect" id="cs-item-type" data-value="custom-cake">
           <button type="button" class="cselect-trigger" onclick="toggleSelect('cs-item-type')">
-            <span class="cselect-label">Custom Cake</span>
+            <span class="cselect-label">Custom</span>
             <svg class="cselect-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <ul class="cselect-menu">
-            <li class="cselect-option selected" onclick="selectOption('cs-item-type','custom-cake','Custom Cake')">Custom Cake <span class="cselect-check">✓</span></li>
-            <li class="cselect-option" onclick="selectOption('cs-item-type','pastry-batch','Pastry / Batch Bake')">Pastry / Batch Bake <span class="cselect-check">✓</span></li>
+            <li class="cselect-option selected" onclick="selectOption('cs-item-type','custom-cake','Custom')">Custom <span class="cselect-check">✓</span></li>
+            <li class="cselect-option" onclick="selectOption('cs-item-type','pastry-batch','Batch')">Batch <span class="cselect-check">✓</span></li>
           </ul>
         </div>
       </div>
@@ -325,53 +351,62 @@
     </div>
 
     <div class="card">
-      <p class="card-label">Your Costs</p>
+      <p class="card-label">Cost &amp; Labor</p>
       <div class="grid-2">
         <div class="field">
-          <label class="field-label">Food &amp; Ingredients</label>
+          <label class="field-label">Ingredients</label>
           <div class="field-wrap has-prefix">
             <span class="field-prefix">$</span>
             <input class="field-input" type="number" id="food-cost" inputmode="decimal" step="0.01" min="0" placeholder="0.00" />
           </div>
         </div>
         <div class="field">
-          <label class="field-label">Packaging &amp; Supplies</label>
+          <label class="field-label">Supplies</label>
           <div class="field-wrap has-prefix">
             <span class="field-prefix">$</span>
             <input class="field-input" type="number" id="packaging-cost" inputmode="decimal" step="0.01" min="0" placeholder="0.00" />
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="card">
-      <p class="card-label">Your Labor</p>
       <div class="grid-2">
         <div class="field">
-          <label class="field-label">Total Labor Time</label>
-          <div class="field-wrap has-suffix">
-            <input class="field-input" type="number" id="labor-time" inputmode="decimal" step="0.25" min="0" placeholder="0" />
-            <span class="field-suffix">hrs</span>
+          <label class="field-label" style="display:flex;align-items:center;gap:4px;">
+            Overhead
+            <span class="tooltip-wrap">
+              <span class="tooltip-icon">?</span>
+              <span class="tooltip-text">Covers your fixed business expenses like rent, utilities, insurance, and equipment maintenance. A standard practice is to add 5-10% of your total project costs.</span>
+            </span>
+          </label>
+          <div class="field-wrap has-prefix">
+            <span class="field-prefix">$</span>
+            <input class="field-input" type="number" id="overhead-cost" inputmode="decimal" step="0.01" min="0" placeholder="0.00" />
           </div>
         </div>
         <div class="field">
-          <label class="field-label">Desired Hourly Wage</label>
+          <label class="field-label">Labor Rate</label>
           <div class="field-wrap has-prefix">
             <span class="field-prefix">$</span>
             <input class="field-input" type="number" id="hourly-wage" inputmode="decimal" step="0.01" min="0" placeholder="0.00" />
           </div>
         </div>
       </div>
+      <div class="field">
+        <label class="field-label">Total Labor Time</label>
+        <div class="field-wrap has-suffix">
+          <input class="field-input" type="number" id="labor-time" inputmode="decimal" step="0.25" min="0" placeholder="0" />
+          <span class="field-suffix">hrs</span>
+        </div>
+      </div>
     </div>
 
     <button class="btn-calc" onclick="calculate()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
-      Calculate Retail Price
+      Calculate Quote
     </button>
 
     <div id="results">
       <div class="result-hero">
-        <div class="result-badge">✦ Recommended Retail Price</div>
+        <div class="result-badge">✦ Suggested Price</div>
         <div class="result-price" id="result-price">$0.00</div>
       </div>
       <div class="card result-slice" id="slice-card">
@@ -573,13 +608,14 @@
   function calculate() {
     const food      = parseFloat(g('food-cost').value)      || 0;
     const packaging = parseFloat(g('packaging-cost').value) || 0;
+    const overhead  = parseFloat(g('overhead-cost').value)  || 0;
     const laborTime = parseFloat(g('labor-time').value)     || 0;
     const wage      = parseFloat(g('hourly-wage').value)    || 0;
     const size      = g('cs-size').dataset.value;
     const tiers     = g('cs-tiers').dataset.value;
     const isPastry  = g('cs-item-type').dataset.value === 'pastry-batch';
 
-    const outOfPocket    = food + packaging;
+    const outOfPocket    = food + packaging + overhead;
     const laborPayout    = laborTime * wage;
     const productionCost = outOfPocket + laborPayout;
     const retailPrice    = productionCost / 0.6;
