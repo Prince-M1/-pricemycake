@@ -1,0 +1,2 @@
+# Replace the line below with the exact publisher ID line from Ha's AdSense dashboard
+# Format: google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
